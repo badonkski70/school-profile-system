@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Matalatala Elementary - School Profile System</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    body { background: #f0f2f5; color: #333; }
+    .header { background: #1a73e8; color: white; padding: 1rem 2rem; display: flex; align-items: center; justify-content: space-between; }
+    .header h1 { font-size: 1.5rem; }
+    .header .sub { font-size: 0.85rem; opacity: 0.85; margin-top: 2px; }
+    .nav { background: #1557b0; display: flex; padding: 0 2rem; }
+    .nav button { background: none; border: none; color: white; padding: 0.75rem 1.5rem; cursor: pointer; font-size: 0.95rem; border-bottom: 3px solid transparent; transition: 0.2s; }
+    .nav button:hover { background: rgba(255,255,255,0.1); }
+    .nav button.active { border-bottom-color: white; font-weight: 600; }
+    .container { max-width: 1200px; margin: 2rem auto; padding: 0 1rem; }
+    .page { display: none; }
+    .page.active { display: block; }
+    .card { background: white; border-radius: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.12); padding: 1.5rem; margin-bottom: 1.5rem; }
+    .card h2 { font-size: 1.2rem; margin-bottom: 1rem; color: #1a73e8; }
+    .form-row { display: flex; gap: 1rem; flex-wrap: wrap; margin-bottom: 0.75rem; }
+    .form-group { flex: 1; min-width: 200px; }
+    .form-group label { display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 4px; color: #555; }
+    .form-group input, .form-group select, .form-group textarea { width: 100%; padding: 0.5rem 0.75rem; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 0.95rem; transition: 0.2s; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { outline: none; border-color: #1a73e8; box-shadow: 0 0 0 2px rgba(26,115,232,0.2); }
+    .form-group textarea { resize: vertical; min-height: 60px; }
+    .btn { padding: 0.5rem 1.25rem; border: none; border-radius: 4px; cursor: pointer; font-size: 0.9rem; font-weight: 600; transition: 0.2s; }
+    .btn-primary { background: #1a73e8; color: white; }
+    .btn-primary:hover { background: #1557b0; }
+    .btn-danger { background: #dc3545; color: white; }
+    .btn-danger:hover { background: #b02a37; }
+    .btn-success { background: #28a745; color: white; }
+    .btn-success:hover { background: #1e7e34; }
+    .btn-warning { background: #ffc107; color: #333; }
+    .btn-warning:hover { background: #e0a800; }
+    .btn-sm { padding: 0.3rem 0.75rem; font-size: 0.8rem; }
+    table { width: 100%; border-collapse: collapse; }
+    table th, table td { padding: 0.6rem 0.75rem; text-align: left; border-bottom: 1px solid #e0e0e0; font-size: 0.9rem; }
+    table th { background: #f8f9fa; font-weight: 600; color: #555; }
+    table tr:hover { background: #f5f8ff; }
+    .actions { display: flex; gap: 0.4rem; }
+    .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.75rem; font-weight: 600; }
+    .badge-blue { background: #e3f2fd; color: #1565c0; }
+    .badge-green { background: #e8f5e9; color: #2e7d32; }
+    .badge-orange { background: #fff3e0; color: #e65100; }
+    .badge-purple { background: #f3e5f5; color: #6a1b9a; }
+    .modal-overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 1000; align-items: center; justify-content: center; }
+    .modal-overlay.show { display: flex; }
+    .modal { background: white; border-radius: 8px; width: 90%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 1.5rem; }
+    .modal h2 { margin-bottom: 1rem; color: #1a73e8; }
+    .modal .btn-row { display: flex; gap: 0.75rem; margin-top: 1rem; justify-content: flex-end; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { background: white; border-radius: 8px; padding: 1.25rem; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.12); }
+    .stat-card .num { font-size: 2rem; font-weight: 700; color: #1a73e8; }
+    .stat-card .label { font-size: 0.85rem; color: #666; margin-top: 4px; }
+    .empty { text-align: center; padding: 2rem; color: #999; font-size: 0.95rem; }
+    .search-bar { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .search-bar input { flex: 1; padding: 0.5rem 0.75rem; border: 1px solid #d0d0d0; border-radius: 4px; font-size: 0.95rem; }
+    .search-bar input:focus { outline: none; border-color: #1a73e8; }
+    .toast { position: fixed; bottom: 2rem; right: 2rem; background: #333; color: white; padding: 0.75rem 1.5rem; border-radius: 6px; font-size: 0.9rem; opacity: 0; transform: translateY(20px); transition: 0.3s; z-index: 2000; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>Matalatala Elementary School</h1>
+    <div class="sub">Profile & Program Management System</div>
+  </div>
+  <div id="clock" style="font-size:0.9rem;"></div>
+</div>
+
+<div class="nav">
+  <button class="active" data-page="dashboard">Dashboard</button>
+  <button data-page="teachers">Teachers</button>
+  <button data-page="classes">Classes</button>
+  <button data-page="programs">Programs</button>
+</div>
+
+<div class="container">
+
+  <!-- ============= DASHBOARD ============= -->
+  <div id="page-dashboard" class="page active">
+    <div class="stats-grid" id="statsGrid"></div>
+    <div class="card">
+      <h2>Recent Activity</h2>
+      <div id="recentActivity"><div class="empty">No activity yet.</div></div>
+    </div>
+  </div>
+
+  <!-- ============= TEACHERS ============= -->
+  <div id="page-teachers" class="page">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="margin:0;">Teachers</h2>
+        <button class="btn btn-primary" onclick="openTeacherModal()">+ Add Teacher</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="teacherSearch" placeholder="Search teachers..." oninput="renderTeachers()">
+      </div>
+      <div id="teacherTableWrapper">
+        <div class="empty">No teachers registered yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= CLASSES ============= -->
+  <div id="page-classes" class="page">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="margin:0;">Classes</h2>
+        <button class="btn btn-primary" onclick="openClassModal()">+ Add Class</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="classSearch" placeholder="Search classes..." oninput="renderClasses()">
+      </div>
+      <div id="classTableWrapper">
+        <div class="empty">No classes yet.</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ============= PROGRAMS ============= -->
+  <div id="page-programs" class="page">
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1rem;">
+        <h2 style="margin:0;">School Programs</h2>
+        <button class="btn btn-primary" onclick="openProgramModal()">+ Add Program</button>
+      </div>
+      <div class="search-bar">
+        <input type="text" id="programSearch" placeholder="Search programs..." oninput="renderPrograms()">
+      </div>
+      <div id="programTableWrapper">
+        <div class="empty">No programs created yet.</div>
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- ============= TEACHER MODAL ============= -->
+<div class="modal-overlay" id="teacherModal">
+  <div class="modal">
+    <h2 id="teacherModalTitle">Add Teacher</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Employee ID</label><input type="text" id="tId"></div>
+      <div class="form-group"><label>Full Name</label><input type="text" id="tName"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Email</label><input type="email" id="tEmail"></div>
+      <div class="form-group"><label>Phone</label><input type="text" id="tPhone"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Specialization</label><input type="text" id="tSpecialization" placeholder="e.g. Math, Science"></div>
+      <div class="form-group"><label>Status</label>
+        <select id="tStatus"><option value="Active">Active</option><option value="On Leave">On Leave</option><option value="Inactive">Inactive</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Address</label><input type="text" id="tAddress"></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('teacherModal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveTeacher()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= CLASS MODAL ============= -->
+<div class="modal-overlay" id="classModal">
+  <div class="modal">
+    <h2 id="classModalTitle">Add Class</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Grade Level</label>
+        <select id="cGrade"><option>Grade 1</option><option>Grade 2</option><option>Grade 3</option><option>Grade 4</option><option>Grade 5</option><option>Grade 6</option></select>
+      </div>
+      <div class="form-group"><label>Section</label><input type="text" id="cSection" placeholder="e.g. A, B, Mabini"></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Adviser</label>
+        <select id="cAdviser"><option value="">-- None --</option></select>
+      </div>
+      <div class="form-group"><label>Room</label><input type="text" id="cRoom" placeholder="e.g. Room 101"></div>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('classModal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveClass()">Save</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============= PROGRAM MODAL ============= -->
+<div class="modal-overlay" id="programModal">
+  <div class="modal">
+    <h2 id="programModalTitle">Add Program</h2>
+    <div class="form-row">
+      <div class="form-group"><label>Program Name</label><input type="text" id="pName"></div>
+      <div class="form-group"><label>Type</label>
+        <select id="pType">
+          <option>Feeding Program</option>
+          <option>Remedial Class</option>
+          <option>Sports Program</option>
+          <option>Arts & Music</option>
+          <option>Health & Nutrition</option>
+          <option>Environmental</option>
+          <option>Literacy Program</option>
+          <option>Other</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Schedule</label><input type="text" id="pSchedule" placeholder="e.g. Mon-Wed 8-10AM"></div>
+      <div class="form-group"><label>Coordinator</label>
+        <select id="pCoordinator"><option value="">-- Select Teacher --</option></select>
+      </div>
+    </div>
+    <div class="form-group"><label>Beneficiaries</label><input type="text" id="pBeneficiaries" placeholder="e.g. Grades 1-3"></div>
+    <div class="form-group"><label>Description</label><textarea id="pDescription" placeholder="Program description..."></textarea></div>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeModal('programModal')">Cancel</button>
+      <button class="btn btn-success" onclick="saveProgram()">Save</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+  // =========== DATA ===========
+  let data = { teachers: [], classes: [], programs: [], nextTeacherId: 1, nextClassId: 1, nextProgramId: 1 };
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem('matalatalaData');
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        data = { ...data, ...parsed };
+      }
+    } catch (e) { console.warn('Load failed', e); }
+  }
+
+  function saveData() {
+    localStorage.setItem('matalatalaData', JSON.stringify(data));
+  }
+
+  function getNextId(type) {
+    const key = 'next' + type.charAt(0).toUpperCase() + type.slice(1) + 'Id';
+    const id = data[key];
+    data[key]++;
+    saveData();
+    return id;
+  }
+
+  function toast(msg) {
+    const el = document.getElementById('toast');
+    el.textContent = msg;
+    el.classList.add('show');
+    setTimeout(() => el.classList.remove('show'), 2500);
+  }
+
+  // =========== NAVIGATION ===========
+  document.querySelectorAll('.nav button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+      document.getElementById('page-' + btn.dataset.page).classList.add('active');
+      if (btn.dataset.page === 'dashboard') renderDashboard();
+      if (btn.dataset.page === 'teachers') renderTeachers();
+      if (btn.dataset.page === 'classes') renderClasses();
+      if (btn.dataset.page === 'programs') renderPrograms();
+    });
+  });
+
+  // =========== MODALS ===========
+  function openModal(id) { document.getElementById(id).classList.add('show'); }
+  function closeModal(id) { document.getElementById(id).classList.remove('show'); }
+  document.querySelectorAll('.modal-overlay').forEach(el => {
+    el.addEventListener('click', e => { if (e.target === el) el.classList.remove('show'); });
+  });
+
+  // =========== DASHBOARD ===========
+  function renderDashboard() {
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card"><div class="num">${data.teachers.length}</div><div class="label">Teachers</div></div>
+      <div class="stat-card"><div class="num">${data.classes.length}</div><div class="label">Classes</div></div>
+      <div class="stat-card"><div class="num">${data.programs.length}</div><div class="label">Programs</div></div>
+      <div class="stat-card"><div class="num">${data.teachers.filter(t => t.status === 'Active').length}</div><div class="label">Active Teachers</div></div>
+    `;
+    const activity = document.getElementById('recentActivity');
+    const all = [
+      ...data.teachers.map(t => ({ type: 'teacher', text: `Teacher added: ${t.name}`, time: t._created })),
+      ...data.classes.map(c => ({ type: 'class', text: `Class added: ${c.grade} - ${c.section}`, time: c._created })),
+      ...data.programs.map(p => ({ type: 'program', text: `Program added: ${p.name}`, time: p._created })),
+    ].filter(i => i.time).sort((a, b) => new Date(b.time) - new Date(a.time)).slice(0, 8);
+    if (!all.length) { activity.innerHTML = '<div class="empty">No activity yet.</div>'; return; }
+    activity.innerHTML = '<table><thead><tr><th>Event</th><th>Date</th></tr></thead><tbody>' +
+      all.map(i => `<tr><td>${i.text}</td><td>${new Date(i.time).toLocaleDateString()}</td></tr>`).join('') +
+      '</tbody></table>';
+  }
+
+  // =========== TEACHERS ===========
+  let editingTeacherId = null;
+
+  function openTeacherModal(teacher) {
+    editingTeacherId = null;
+    document.getElementById('teacherModalTitle').textContent = 'Add Teacher';
+    ['tId','tName','tEmail','tPhone','tSpecialization','tAddress'].forEach(id => document.getElementById(id).value = '');
+    document.getElementById('tStatus').value = 'Active';
+    if (teacher) {
+      editingTeacherId = teacher.id;
+      document.getElementById('teacherModalTitle').textContent = 'Edit Teacher';
+      document.getElementById('tId').value = teacher.employeeId || '';
+      document.getElementById('tName').value = teacher.name || '';
+      document.getElementById('tEmail').value = teacher.email || '';
+      document.getElementById('tPhone').value = teacher.phone || '';
+      document.getElementById('tSpecialization').value = teacher.specialization || '';
+      document.getElementById('tStatus').value = teacher.status || 'Active';
+      document.getElementById('tAddress').value = teacher.address || '';
+    }
+    openModal('teacherModal');
+  }
+
+  function saveTeacher() {
+    const name = document.getElementById('tName').value.trim();
+    if (!name) { toast('Please enter a name.'); return; }
+    const obj = {
+      employeeId: document.getElementById('tId').value.trim(),
+      name,
+      email: document.getElementById('tEmail').value.trim(),
+      phone: document.getElementById('tPhone').value.trim(),
+      specialization: document.getElementById('tSpecialization').value.trim(),
+      status: document.getElementById('tStatus').value,
+      address: document.getElementById('tAddress').value.trim(),
+    };
+    if (editingTeacherId) {
+      const idx = data.teachers.findIndex(t => t.id === editingTeacherId);
+      if (idx !== -1) { data.teachers[idx] = { ...data.teachers[idx], ...obj }; }
+      toast('Teacher updated.');
+    } else {
+      obj.id = getNextId('teacher');
+      obj._created = new Date().toISOString();
+      data.teachers.push(obj);
+      toast('Teacher added.');
+    }
+    saveData();
+    closeModal('teacherModal');
+    renderTeachers();
+    updateSelects();
+  }
+
+  function deleteTeacher(id) {
+    if (!confirm('Delete this teacher?')) return;
+    data.teachers = data.teachers.filter(t => t.id !== id);
+    saveData();
+    renderTeachers();
+    updateSelects();
+    toast('Teacher deleted.');
+  }
+
+  function renderTeachers() {
+    const q = document.getElementById('teacherSearch').value.toLowerCase();
+    const list = data.teachers.filter(t => !q || t.name.toLowerCase().includes(q) || t.specialization.toLowerCase().includes(q) || (t.employeeId && t.employeeId.toLowerCase().includes(q)));
+    const wrap = document.getElementById('teacherTableWrapper');
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No teachers found.</div>'; return; }
+    wrap.innerHTML = `<table><thead><tr><th>ID</th><th>Name</th><th>Specialization</th><th>Contact</th><th>Status</th><th>Actions</th></tr></thead><tbody>
+      ${list.map(t => `<tr>
+        <td>${t.employeeId || '—'}</td>
+        <td><strong>${t.name}</strong></td>
+        <td>${t.specialization || '—'}</td>
+        <td>${t.email || ''}${t.phone ? '<br>' + t.phone : ''}</td>
+        <td><span class="badge ${t.status === 'Active' ? 'badge-green' : t.status === 'On Leave' ? 'badge-orange' : 'badge-blue'}">${t.status}</span></td>
+        <td class="actions">
+          <button class="btn btn-warning btn-sm" onclick="openTeacherModal(data.teachers.find(tt => tt.id === ${t.id}))">Edit</button>
+          <button class="btn btn-danger btn-sm" onclick="deleteTeacher(${t.id})">Del</button>
+        </td>
+      </tr>`).join('')}
+    </tbody></table>`;
+  }
+
+  // =========== CLASSES ===========
+  let editingClassId = null;
+
+  function populateAdviserSelect() {
+    const sel = document.getElementById('cAdviser');
+    sel.innerHTML = '<option value="">-- None --</option>' + data.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+
+  function openClassModal(cls) {
+    editingClassId = null;
+    document.getElementById('classModalTitle').textContent = 'Add Class';
+    document.getElementById('cSection').value = '';
+    document.getElementById('cRoom').value = '';
+    document.getElementById('cGrade').value = 'Grade 1';
+    populateAdviserSelect();
+    if (cls) {
+      editingClassId = cls.id;
+      document.getElementById('classModalTitle').textContent = 'Edit Class';
+      document.getElementById('cGrade').value = cls.grade;
+      document.getElementById('cSection').value = cls.section;
+      document.getElementById('cRoom').value = cls.room || '';
+      document.getElementById('cAdviser').value = cls.adviserId || '';
+    }
+    openModal('classModal');
+  }
+
+  function saveClass() {
+    const grade = document.getElementById('cGrade').value;
+    const section = document.getElementById('cSection').value.trim();
+    if (!section) { toast('Please enter a section.'); return; }
+    const obj = { grade, section, room: document.getElementById('cRoom').value.trim(), adviserId: document.getElementById('cAdviser').value || '' };
+    if (editingClassId) {
+      const idx = data.classes.findIndex(c => c.id === editingClassId);
+      if (idx !== -1) data.classes[idx] = { ...data.classes[idx], ...obj };
+      toast('Class updated.');
+    } else {
+      obj.id = getNextId('class');
+      obj._created = new Date().toISOString();
+      data.classes.push(obj);
+      toast('Class added.');
+    }
+    saveData();
+    closeModal('classModal');
+    renderClasses();
+  }
+
+  function deleteClass(id) {
+    if (!confirm('Delete this class?')) return;
+    data.classes = data.classes.filter(c => c.id !== id);
+    saveData();
+    renderClasses();
+    toast('Class deleted.');
+  }
+
+  function renderClasses() {
+    const q = document.getElementById('classSearch').value.toLowerCase();
+    const list = data.classes.filter(c => !q || c.grade.toLowerCase().includes(q) || c.section.toLowerCase().includes(q) || (c.room && c.room.toLowerCase().includes(q)));
+    const wrap = document.getElementById('classTableWrapper');
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No classes found.</div>'; return; }
+    wrap.innerHTML = `<table><thead><tr><th>Grade</th><th>Section</th><th>Adviser</th><th>Room</th><th>Actions</th></tr></thead><tbody>
+      ${list.map(c => {
+        const adviser = data.teachers.find(t => t.id == c.adviserId);
+        return `<tr>
+          <td>${c.grade}</td>
+          <td><strong>${c.section}</strong></td>
+          <td>${adviser ? adviser.name : '<span style="color:#999;">—</span>'}</td>
+          <td>${c.room || '—'}</td>
+          <td class="actions">
+            <button class="btn btn-warning btn-sm" onclick="openClassModal(data.classes.find(cc => cc.id === ${c.id}))">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteClass(${c.id})">Del</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>`;
+  }
+
+  // =========== PROGRAMS ===========
+  let editingProgramId = null;
+
+  function populateCoordinatorSelect() {
+    const sel = document.getElementById('pCoordinator');
+    sel.innerHTML = '<option value="">-- Select Teacher --</option>' + data.teachers.map(t => `<option value="${t.id}">${t.name}</option>`).join('');
+  }
+
+  function openProgramModal(prog) {
+    editingProgramId = null;
+    document.getElementById('programModalTitle').textContent = 'Add Program';
+    document.getElementById('pName').value = '';
+    document.getElementById('pSchedule').value = '';
+    document.getElementById('pBeneficiaries').value = '';
+    document.getElementById('pDescription').value = '';
+    document.getElementById('pType').value = 'Feeding Program';
+    populateCoordinatorSelect();
+    if (prog) {
+      editingProgramId = prog.id;
+      document.getElementById('programModalTitle').textContent = 'Edit Program';
+      document.getElementById('pName').value = prog.name;
+      document.getElementById('pType').value = prog.type;
+      document.getElementById('pSchedule').value = prog.schedule || '';
+      document.getElementById('pBeneficiaries').value = prog.beneficiaries || '';
+      document.getElementById('pDescription').value = prog.description || '';
+      document.getElementById('pCoordinator').value = prog.coordinatorId || '';
+    }
+    openModal('programModal');
+  }
+
+  function saveProgram() {
+    const name = document.getElementById('pName').value.trim();
+    if (!name) { toast('Please enter a program name.'); return; }
+    const obj = {
+      name,
+      type: document.getElementById('pType').value,
+      schedule: document.getElementById('pSchedule').value.trim(),
+      beneficiaries: document.getElementById('pBeneficiaries').value.trim(),
+      description: document.getElementById('pDescription').value.trim(),
+      coordinatorId: document.getElementById('pCoordinator').value || '',
+    };
+    if (editingProgramId) {
+      const idx = data.programs.findIndex(p => p.id === editingProgramId);
+      if (idx !== -1) data.programs[idx] = { ...data.programs[idx], ...obj };
+      toast('Program updated.');
+    } else {
+      obj.id = getNextId('program');
+      obj._created = new Date().toISOString();
+      data.programs.push(obj);
+      toast('Program added.');
+    }
+    saveData();
+    closeModal('programModal');
+    renderPrograms();
+  }
+
+  function deleteProgram(id) {
+    if (!confirm('Delete this program?')) return;
+    data.programs = data.programs.filter(p => p.id !== id);
+    saveData();
+    renderPrograms();
+    toast('Program deleted.');
+  }
+
+  function renderPrograms() {
+    const q = document.getElementById('programSearch').value.toLowerCase();
+    const list = data.programs.filter(p => !q || p.name.toLowerCase().includes(q) || p.type.toLowerCase().includes(q) || (p.beneficiaries && p.beneficiaries.toLowerCase().includes(q)));
+    const wrap = document.getElementById('programTableWrapper');
+    if (!list.length) { wrap.innerHTML = '<div class="empty">No programs found.</div>'; return; }
+    const typeBadge = { 'Feeding Program':'badge-green','Remedial Class':'badge-orange','Sports Program':'badge-blue','Arts & Music':'badge-purple','Health & Nutrition':'badge-green','Environmental':'badge-blue','Literacy Program':'badge-orange','Other':'badge-blue' };
+    wrap.innerHTML = `<table><thead><tr><th>Program</th><th>Type</th><th>Coordinator</th><th>Schedule</th><th>Beneficiaries</th><th>Actions</th></tr></thead><tbody>
+      ${list.map(p => {
+        const coord = data.teachers.find(t => t.id == p.coordinatorId);
+        return `<tr>
+          <td><strong>${p.name}</strong></td>
+          <td><span class="badge ${typeBadge[p.type] || 'badge-blue'}">${p.type}</span></td>
+          <td>${coord ? coord.name : '<span style="color:#999;">—</span>'}</td>
+          <td>${p.schedule || '—'}</td>
+          <td>${p.beneficiaries || '—'}</td>
+          <td class="actions">
+            <button class="btn btn-warning btn-sm" onclick="openProgramModal(data.programs.find(pp => pp.id === ${p.id}))">Edit</button>
+            <button class="btn btn-danger btn-sm" onclick="deleteProgram(${p.id})">Del</button>
+          </td>
+        </tr>`;
+      }).join('')}
+    </tbody></table>`;
+  }
+
+  function updateSelects() {
+    populateAdviserSelect();
+    populateCoordinatorSelect();
+  }
+
+  // =========== CLOCK ===========
+  function updateClock() {
+    document.getElementById('clock').textContent = new Date().toLocaleString();
+  }
+
+  // =========== INIT ===========
+  loadData();
+  updateSelects();
+  renderDashboard();
+  updateClock();
+  setInterval(updateClock, 1000);
+</script>
+
+</body>
+</html>
